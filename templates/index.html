@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTU Special School - AI Assistant</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c2410c'><path d='M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    
+    <!-- Left Sidebar: School Identity & Photo -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-crest">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="brand-info">
+          <h2>ASTU Special School</h2>
+          <span class="brand-sub">Adama Science & Technology University</span>
+        </div>
+      </div>
+
+      <!-- School Photo Card -->
+      <div class="school-photo-card">
+        <div class="image-wrapper">
+          <img src="/static/img/school.jpg" alt="ASTU Special School Campus Building" class="school-image">
+          <div class="image-badge">
+            <i class="fa-solid fa-location-dot"></i> Adama, Ethiopia
+          </div>
+        </div>
+        <div class="photo-caption">
+          <h3>Main Academic Building</h3>
+          <p>Fostering academic excellence, innovation, and technological leadership in talented students.</p>
+        </div>
+      </div>
+
+      <!-- Quick School Directory / Key Facts -->
+      <div class="info-section">
+        <h4 class="section-title"><i class="fa-solid fa-circle-info"></i> School Directory</h4>
+        <ul class="info-list">
+          <li>
+            <i class="fa-solid fa-user-tie"></i>
+            <div>
+              <strong>Director</strong>
+              <span>Mr. Garedew Jima</span>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-user-gear"></i>
+            <div>
+              <strong>Vice Director</strong>
+              <span>Mr. Mekonen Kebede</span>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-phone"></i>
+            <div>
+              <strong>Phone</strong>
+              <a href="tel:0222118846">022 211 8846</a>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-envelope"></i>
+            <div>
+              <strong>Email</strong>
+              <a href="mailto:astuss@gmail.com">astuss@gmail.com</a>
+            </div>
+          </li>
+          <li>
+            <i class="fa-brands fa-telegram"></i>
+            <div>
+              <strong>Official Telegram</strong>
+              <a href="https://t.me/ASTU_SPS" target="_blank" rel="noopener">@ASTU_SPS</a>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-school"></i>
+            <div>
+              <strong>Type</strong>
+              <span>Non-boarding Secondary School</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Developer / Information Feedback Card -->
+      <div class="dev-card">
+        <div class="dev-header">
+          <i class="fa-solid fa-code"></i>
+          <span>Missing Information?</span>
+        </div>
+        <p>If you need new information added to this AI assistant, reach out to the school bot developers on Telegram:</p>
+        <div class="dev-links">
+          <a href="https://t.me/GTRXBomerance" target="_blank" class="dev-btn"><i class="fa-brands fa-telegram"></i> @GTRXBomerance</a>
+          <a href="https://t.me/Fear_NF" target="_blank" class="dev-btn"><i class="fa-brands fa-telegram"></i> @Fear_NF</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Container -->
+    <main class="chat-container">
+      
+      <!-- Topbar Navigation -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle School Info">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="topbar-title">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div>
+              <h1>ASTU AI Assistant</h1>
+              <span class="status-text" id="statusText">Checking status...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="action-btn settings-btn" id="openSettingsBtn" title="Configure Groq API Key">
+            <i class="fa-solid fa-key"></i>
+            <span>API Key</span>
+          </button>
+          <button class="action-btn" id="clearChatBtn" title="Clear conversation">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>Restart</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Message History Stream -->
+      <div class="messages-container" id="messagesContainer">
+        
+        <!-- Welcome Banner -->
+        <div class="welcome-box">
+          <div class="bot-avatar-large">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <h2>Welcome to ASTU Special School AI</h2>
+          <p>I am here to help students, parents, and visitors get verified information about our school, programs, leadership, and contact channels.</p>
+          
+          <!-- Suggested Quick Prompts -->
+          <div class="prompt-chips-wrapper">
+            <span class="chips-label">Popular questions you can ask:</span>
+            <div class="chips-grid">
+              <button class="chip" data-prompt="Where is ASTU Special School located?">
+                <i class="fa-solid fa-location-dot"></i> Where is the school located?
+              </button>
+              <button class="chip" data-prompt="Who is the director and vice director of the school?">
+                <i class="fa-solid fa-user-tie"></i> Who is the director?
+              </button>
+              <button class="chip" data-prompt="How can I contact ASTU Special School?">
+                <i class="fa-solid fa-phone"></i> Contact channels & phone
+              </button>
+              <button class="chip" data-prompt="What does ASTU Special School promote and what is its focus?">
+                <i class="fa-solid fa-microscope"></i> What does the school promote?
+              </button>
+              <button class="chip" data-prompt="Is ASTU Special School a boarding school?">
+                <i class="fa-solid fa-bed"></i> Is it a boarding school?
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typingIndicator" style="display: none;">
+        <div class="bot-avatar-mini"><i class="fa-solid fa-robot"></i></div>
+        <div class="dots-bubble">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <form id="chatForm" class="chat-form">
+          <div class="input-wrapper">
+            <textarea 
+              id="userInput" 
+              placeholder="Ask anything about ASTU Special School... (e.g. location, admission, directors)" 
+              rows="1" 
+              autocomplete="off"
+            ></textarea>
+            <button type="submit" id="sendBtn" class="send-btn" title="Send message" disabled>
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </div>
+        </form>
+        <div class="input-footnote">
+          <span>Verified School Knowledge Base • ASTU Special School, Adama, Ethiopia</span>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Settings / API Key Modal -->
+  <div class="modal-backdrop" id="settingsModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-sliders"></i>
+          <h3>Groq AI Settings</h3>
+        </div>
+        <button class="modal-close" id="closeSettingsBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Paste your Groq API key below to activate ultra-fast live conversational AI responses.
+        </p>
+        <div class="api-status-box" id="modalKeyStatus">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Checking connection status...</span>
+        </div>
+        <form id="apiKeyForm">
+          <div class="form-group">
+            <label for="apiKeyInput">Groq API Key</label>
+            <input 
+              type="password" 
+              id="apiKeyInput" 
+              placeholder="gsk_..." 
+              autocomplete="off"
+              required
+            >
+            <small class="form-help">
+              Don't have a key? Get a free API key at 
+              <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+            </small>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelSettingsBtn">Cancel</button>
+            <button type="submit" class="btn-save" id="saveKeyBtn">
+              <i class="fa-solid fa-floppy-disk"></i> Save Key
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/chat.js"></script>
+</body>
+</html>
