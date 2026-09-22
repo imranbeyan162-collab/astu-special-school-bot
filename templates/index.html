@@ -116,17 +116,13 @@
             <div class="status-indicator" id="statusIndicator"></div>
             <div>
               <h1>ASTU AI Assistant</h1>
-              <span class="status-text" id="statusText">Checking status...</span>
+              <span class="status-text" id="statusText">ASTU Special School • Official Bot</span>
             </div>
           </div>
         </div>
 
         <div class="topbar-actions">
-          <button class="action-btn settings-btn" id="openSettingsBtn" title="Configure Groq API Key">
-            <i class="fa-solid fa-key"></i>
-            <span>API Key</span>
-          </button>
-          <button class="action-btn" id="clearChatBtn" title="Clear conversation">
+          <button class="action-btn" id="clearChatBtn" title="Restart conversation">
             <i class="fa-solid fa-rotate-right"></i>
             <span>Restart</span>
           </button>
@@ -195,56 +191,12 @@
           </div>
         </form>
         <div class="input-footnote">
-          <span>Verified School Knowledge Base • ASTU Special School, Adama, Ethiopia</span>
+          <span>Official School AI • ASTU Special School, Adama, Ethiopia</span>
         </div>
       </div>
 
     </main>
 
-  </div>
-
-  <!-- Settings / API Key Modal -->
-  <div class="modal-backdrop" id="settingsModal" style="display: none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">
-          <i class="fa-solid fa-sliders"></i>
-          <h3>Groq AI Settings</h3>
-        </div>
-        <button class="modal-close" id="closeSettingsBtn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">
-          Paste your Groq API key below to activate ultra-fast live conversational AI responses.
-        </p>
-        <div class="api-status-box" id="modalKeyStatus">
-          <i class="fa-solid fa-circle-check"></i>
-          <span>Checking connection status...</span>
-        </div>
-        <form id="apiKeyForm">
-          <div class="form-group">
-            <label for="apiKeyInput">Groq API Key</label>
-            <input 
-              type="password" 
-              id="apiKeyInput" 
-              placeholder="gsk_..." 
-              autocomplete="off"
-              required
-            >
-            <small class="form-help">
-              Don't have a key? Get a free API key at 
-              <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
-            </small>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="cancelSettingsBtn">Cancel</button>
-            <button type="submit" class="btn-save" id="saveKeyBtn">
-              <i class="fa-solid fa-floppy-disk"></i> Save Key
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 
   <script src="/static/js/chat.js"></script>

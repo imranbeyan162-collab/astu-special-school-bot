@@ -11,15 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusIndicator = document.getElementById('statusIndicator');
   const statusText = document.getElementById('statusText');
 
-  // Settings Modal elements
-  const openSettingsBtn = document.getElementById('openSettingsBtn');
-  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-  const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
-  const settingsModal = document.getElementById('settingsModal');
-  const apiKeyForm = document.getElementById('apiKeyForm');
-  const apiKeyInput = document.getElementById('apiKeyInput');
-  const modalKeyStatus = document.getElementById('modalKeyStatus');
-
   let chatHistory = [];
 
   // Check health and status on load
@@ -29,78 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/health');
       const data = await res.json();
-      if (data.api_key_configured) {
+      if (data.status === 'online') {
         if (statusIndicator) statusIndicator.className = 'status-indicator';
-        if (statusText) statusText.textContent = 'Online • Groq AI Active';
-        if (modalKeyStatus) {
-          modalKeyStatus.className = 'api-status-box active';
-          modalKeyStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Groq API Key is connected & active (' + (data.model || 'Groq') + ')</span>';
-        }
-      } else {
-        if (statusIndicator) statusIndicator.className = 'status-indicator offline';
-        if (statusText) statusText.textContent = 'Verified Knowledge Base Active';
-        if (modalKeyStatus) {
-          modalKeyStatus.className = 'api-status-box inactive';
-          modalKeyStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>No API Key configured. Running in Local Verified Knowledge Base mode.</span>';
-        }
+        if (statusText) statusText.textContent = 'ASTU Special School • AI Assistant';
       }
     } catch (e) {
-      if (statusText) statusText.textContent = 'Server Offline';
-      if (statusIndicator) statusIndicator.className = 'status-indicator offline';
-    }
-  }
-
-  // Settings modal open/close
-  if (openSettingsBtn && settingsModal) {
-    openSettingsBtn.addEventListener('click', () => {
-      settingsModal.style.display = 'flex';
-      checkServerHealth();
-      if (apiKeyInput) apiKeyInput.focus();
-    });
-
-    const closeModal = () => { settingsModal.style.display = 'none'; };
-    if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeModal);
-    if (cancelSettingsBtn) cancelSettingsBtn.addEventListener('click', closeModal);
-    settingsModal.addEventListener('click', (e) => {
-      if (e.target === settingsModal) closeModal();
-    });
-
-    // Save API key via in-app settings
-    if (apiKeyForm) {
-      apiKeyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const key = apiKeyInput.value.trim();
-        if (!key) return;
-
-        const saveBtn = document.getElementById('saveKeyBtn');
-        const originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-        saveBtn.disabled = true;
-
-        try {
-          const res = await fetch('/api/settings/key', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api_key: key })
-          });
-          const data = await res.json();
-          saveBtn.innerHTML = originalText;
-          saveBtn.disabled = false;
-
-          if (data.success) {
-            apiKeyInput.value = '';
-            closeModal();
-            checkServerHealth();
-            appendMessage('assistant', '✅ **Groq API Key successfully configured!** High-speed AI model is now active.');
-          } else {
-            alert(data.error || 'Failed to update API key');
-          }
-        } catch (err) {
-          saveBtn.innerHTML = originalText;
-          saveBtn.disabled = false;
-          alert('Could not save API key. Please check your connection.');
-        }
-      });
+      if (statusText) statusText.textContent = 'Offline';
     }
   }
 
@@ -200,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         showTyping(false);
-        appendMessage('assistant', `⚠️ Could not reach server. Please ensure the backend is running.`);
+        appendMessage('assistant', `⚠️ Could not reach server. Please ensure your internet is connected.`);
         console.error(err);
       }
     });
@@ -246,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatMarkdown(text) {
     if (!text) return '';
 
-    // Preserve code blocks
     const codeBlocks = [];
     let formatted = text.replace(/```(?:([a-zA-Z0-9_-]+)?\n)?([\s\S]*?)```/g, (match, lang, code) => {
       const id = `__CB_${codeBlocks.length}__`;
@@ -255,23 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     formatted = escapeHtml(formatted);
-
-    // Markdown Links: [label](url)
     formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-    // Inline bold: **text**
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Inline italic: *text*
     formatted = formatted.replace(/(^|[^\*])\*([^\*\n]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
-
-    // Inline code: `text`
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Telegram handles: @username -> clickable link
     formatted = formatted.replace(/@([A-Za-z0-9_]{4,32})/g, '<a class="telegram-tag" href="https://t.me/$1" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> @$1</a>');
 
-    // Paragraphs and lists
     const lines = formatted.split('\n');
     let output = '';
     let inList = false;
@@ -297,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (inList) output += '</ul>';
 
-    // Restore code blocks
     codeBlocks.forEach((block, idx) => {
       output = output.replace(new RegExp(`__CB_${idx}__`, 'g'), block);
     });
