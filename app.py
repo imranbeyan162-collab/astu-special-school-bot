@@ -293,8 +293,9 @@ def chat():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     print("=" * 60)
     print("ASTU Special School AI Assistant Web Server")
     print(f"Server running at: http://localhost:{port}")
     print("=" * 60)
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
