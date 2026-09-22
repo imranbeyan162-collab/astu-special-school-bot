@@ -76,7 +76,7 @@ FEW_SHOT_MESSAGES = [
 ]
 
 def get_api_key():
-    key = os.getenv("GROQ_API_KEY") or os.getenv("GROQ")
+    key = os.getenv("GROQ_API_KEY") or os.getenv("GROQ") or os.getenv("GROQ_KEY")
     if key:
         clean_key = key.strip('\'" \\t\\r\\n')
         if not clean_key.startswith("gsk_your_groq") and len(clean_key) > 10:
