@@ -77,8 +77,10 @@ FEW_SHOT_MESSAGES = [
 
 def get_api_key():
     key = os.getenv("GROQ_API_KEY") or os.getenv("GROQ")
-    if key and not key.strip().startswith("gsk_your_groq") and len(key.strip()) > 10:
-        return key.strip()
+    if key:
+        clean_key = key.strip('\'" \\t\\r\\n')
+        if not clean_key.startswith("gsk_your_groq") and len(clean_key) > 10:
+            return clean_key
     return None
 
 def get_groq_client():
@@ -104,6 +106,10 @@ def answer_from_verified_kb(question: str):
     if name_match:
         name = name_match.group(1).capitalize()
         return f"Oh, welcome {name}! How are you doing today? How can I assist you regarding ASTU Special School?"
+
+    # Name inquiry
+    if any(term in q for term in ["what is my name", "what's my name", "who am i", "remember my name"]):
+        return "You haven't told me your name yet! What should I call you?"
 
     # Friendly greeting
     if any(term in q for term in ["hello", "hi", "hey", "selam", "greetings", "good morning", "good afternoon"]):
@@ -149,7 +155,7 @@ def answer_from_verified_kb(question: str):
         )
 
     # Promotion / Focus / About
-    if any(term in q for term in ["promote", "focus", "values", "about", "mission", "curriculum", "excellence", "science", "collaboration", "what is"]):
+    if any(term in q for term in ["promote", "focus", "values", "about the school", "mission", "curriculum", "excellence", "science", "collaboration", "what does the school", "what is astu"]):
         return (
             "🎯 **About ASTU Special School**\n\n"
             "ASTU Special School is a secondary school in Adama, Ethiopia under ASTU that focuses on "
