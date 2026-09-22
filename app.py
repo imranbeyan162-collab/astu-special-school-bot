@@ -185,11 +185,13 @@ def index():
 def health():
     key = get_api_key()
     model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    masked_key = f"{key[:7]}...{key[-4:]} (len: {len(key)})" if key else "NOT_CONFIGURED"
     return jsonify({
         "status": "online",
         "school": "ASTU Special School",
         "model": model,
-        "api_key_configured": bool(key)
+        "api_key_configured": bool(key),
+        "key_preview": masked_key
     })
 
 @app.route("/api/settings/key", methods=["POST"])
@@ -291,10 +293,12 @@ def chat():
                 pass
 
         # If cloud call fails, use the verified knowledge base
+        print(f"Groq error occurred: {err_msg}")
         fallback_answer = answer_from_verified_kb(user_message)
         return jsonify({
             "reply": fallback_answer,
-            "mode": "fallback_kb"
+            "mode": "fallback_kb",
+            "error_detail": err_msg
         })
 
 if __name__ == "__main__":
