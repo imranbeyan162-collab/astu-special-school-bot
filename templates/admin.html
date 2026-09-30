@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal - ASTU Special School</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c2410c'><path d='M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #c2410c;
+      --primary-hover: #9a3412;
+      --primary-glow: rgba(194, 65, 12, 0.25);
+      --bg-dark: #0a0f1d;
+      --bg-panel: rgba(15, 23, 42, 0.88);
+      --bg-card: rgba(26, 38, 59, 0.75);
+      --bg-input: rgba(15, 23, 42, 0.85);
+      --border: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(194, 65, 12, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --text-dim: #94a3b8;
+      --status-pending: #f59e0b;
+      --status-review: #38bdf8;
+      --status-resolved: #10b981;
+      --status-dismissed: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: 
+        linear-gradient(135deg, rgba(8, 12, 22, 0.88) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(10, 15, 28, 0.94) 100%),
+        url('/static/img/school.jpg') center center / cover no-repeat fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation */
+    .admin-nav {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), #ea580c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-text span {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #ea580c);
+      color: #fff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover), #c2410c);
+      transform: translateY(-1px);
+    }
+
+    /* Container */
+    .main-content {
+      flex: 1;
+      padding: 28px 24px;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Passcode Lock View */
+    .lock-wrapper {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lock-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .lock-icon-box {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      background: rgba(194, 65, 12, 0.15);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: var(--primary);
+      font-size: 30px;
+    }
+
+    .lock-card h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .lock-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .input-field-wrap {
+      position: relative;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-field-wrap label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .input-field-wrap input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 45px 13px 16px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field-wrap input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .toggle-pass-btn {
+      position: absolute;
+      right: 14px;
+      bottom: 13px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .toggle-pass-btn:hover {
+      color: #fff;
+    }
+
+    .alert-box {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+      display: none;
+      text-align: left;
+    }
+
+    /* Admin Dashboard View */
+    .dashboard-header {
+      margin-bottom: 24px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .page-title h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .page-title p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* KPI Metrics Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .kpi-icon.total { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .kpi-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--status-pending); }
+    .kpi-icon.review { background: rgba(56, 189, 248, 0.15); color: var(--status-review); }
+    .kpi-icon.resolved { background: rgba(16, 185, 129, 0.15); color: var(--status-resolved); }
+
+    .kpi-data span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .kpi-data strong {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    /* Filter & Search Bar */
+    .controls-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px 10px 38px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-select option {
+      background: #1e293b;
+      color: #fff;
+    }
+
+    .status-tabs {
+      display: flex;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Complaints Grid */
+    .complaints-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .complaint-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .complaint-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .complaint-card.pending { border-left: 4px solid var(--status-pending); }
+    .complaint-card.review { border-left: 4px solid var(--status-review); }
+    .complaint-card.resolved { border-left: 4px solid var(--status-resolved); }
+    .complaint-card.dismissed { border-left: 4px solid var(--status-dismissed); }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+
+    .badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ticket-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .category-badge {
+      font-size: 0.8rem;
+      background: rgba(194, 65, 12, 0.18);
+      color: #fb923c;
+      border: 1px solid rgba(194, 65, 12, 0.3);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .date-text {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-item i {
+      color: var(--primary);
+    }
+
+    .card-subject {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .card-body {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    .card-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 8px;
+    }
+
+    .status-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-select-wrap label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .status-dropdown {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .status-dropdown.Pending { color: var(--status-pending); border-color: rgba(245, 158, 11, 0.4); }
+    .status-dropdown.Review { color: var(--status-review); border-color: rgba(56, 189, 248, 0.4); }
+    .status-dropdown.Resolved { color: var(--status-resolved); border-color: rgba(16, 185, 129, 0.4); }
+    .status-dropdown.Dismissed { color: var(--status-dismissed); }
+
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-delete:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fff;
+    }
+
+    .admin-notes-section {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .notes-toggle {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .notes-toggle:hover {
+      color: #fff;
+    }
+
+    .notes-box {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .notes-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success { border-left: 4px solid var(--status-resolved); }
+    .toast.error { border-left: 4px solid #ef4444; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="admin-nav">
+    <div class="brand-wrap">
+      <div class="brand-logo">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="brand-text">
+        <h1>ASTU Special School</h1>
+        <span>Official Complaints & Administration Portal</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <a href="/" class="btn-secondary" title="Return to Student AI Bot">
+        <i class="fa-solid fa-comments"></i>
+        <span>Student Bot</span>
+      </a>
+      <button id="logoutBtn" class="btn-secondary" style="display: {{ 'inline-flex' if authenticated else 'none' }};" title="Log out of admin session">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- View 1: Passcode Login View (If not authenticated) -->
+    <div id="loginView" class="lock-wrapper" style="display: {{ 'none' if authenticated else 'flex' }};">
+      <div class="lock-card">
+        <div class="lock-icon-box">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2>Admin Authentication</h2>
+        <p>Enter the ASTU Special School administrative passcode to access the student complaints system.</p>
+
+        <div id="loginAlert" class="alert-box">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span id="loginAlertMsg">Invalid passcode.</span>
+        </div>
+
+        <form id="loginForm">
+          <div class="input-field-wrap">
+            <label for="adminPasscodeInput">Admin Access Code</label>
+            <input 
+              type="password" 
+              id="adminPasscodeInput" 
+              placeholder="Enter passcode..." 
+              autocomplete="current-password" 
+              required
+            >
+            <button type="button" class="toggle-pass-btn" id="togglePassBtn" title="Toggle visibility">
+              <i class="fa-solid fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px;">
+            <i class="fa-solid fa-unlock-keyhole"></i>
+            <span>Enter Admin Portal</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- View 2: Complaints Dashboard (If authenticated) -->
+    <div id="dashboardView" style="display: {{ 'block' if authenticated else 'none' }};">
+      
+      <div class="dashboard-header">
+        <div class="header-row">
+          <div class="page-title">
+            <h2>Student Complaints & Feedback</h2>
+            <p>Review, track, and take action on concerns submitted by ASTU Special School students.</p>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button id="refreshBtn" class="btn-secondary">
+              <i class="fa-solid fa-rotate"></i>
+              <span>Refresh</span>
+            </button>
+            <a href="/api/admin/export" class="btn-primary" download>
+              <i class="fa-solid fa-file-excel"></i>
+              <span>Export CSV</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon total"><i class="fa-solid fa-inbox"></i></div>
+            <div class="kpi-data">
+              <span>Total Submissions</span>
+              <strong id="kpiTotal">0</strong>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon pending"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="kpi-data">
+              <span>Pending Review</span>
+              <strong id="kpiPending">0</strong>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon review"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="kpi-data">
+              <span>Under Review</span>
+              <strong id="kpiReview">0</strong>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon resolved"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="kpi-data">
+              <span>Resolved</span>
+              <strong id="kpiResolved">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="controls-panel">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Search by ticket ID, student name, subject, keyword...">
+          </div>
+
+          <div class="filter-group">
+            <select id="categoryFilter" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="Academic & Teachers">Academic & Teachers</option>
+              <option value="Facilities & Campus">Facilities & Classrooms</option>
+              <option value="Cafeteria & Dining">Cafeteria & Food</option>
+              <option value="Discipline & Student Welfare">Discipline & Student Welfare</option>
+              <option value="Administration & Registry">Administration & Registry</option>
+              <option value="Extracurricular & Sports">Extracurricular & Sports</option>
+              <option value="General Suggestion">General Suggestions</option>
+            </select>
+
+            <div class="status-tabs" id="statusTabs">
+              <button class="tab-btn active" data-status="all">All</button>
+              <button class="tab-btn" data-status="Pending">Pending</button>
+              <button class="tab-btn" data-status="Under Review">In Review</button>
+              <button class="tab-btn" data-status="Resolved">Resolved</button>
+              <button class="tab-btn" data-status="Dismissed">Dismissed</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Complaints Container -->
+      <div id="complaintsList" class="complaints-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-circle-info"></i>
+    <span id="toastMsg">Notification</span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginView = document.getElementById('loginView');
+      const dashboardView = document.getElementById('dashboardView');
+      const loginForm = document.getElementById('loginForm');
+      const adminPasscodeInput = document.getElementById('adminPasscodeInput');
+      const togglePassBtn = document.getElementById('togglePassBtn');
+      const eyeIcon = document.getElementById('eyeIcon');
+      const loginAlert = document.getElementById('loginAlert');
+      const loginAlertMsg = document.getElementById('loginAlertMsg');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const searchInput = document.getElementById('searchInput');
+      const categoryFilter = document.getElementById('categoryFilter');
+      const statusTabs = document.getElementById('statusTabs');
+      const complaintsList = document.getElementById('complaintsList');
+
+      // KPIs
+      const kpiTotal = document.getElementById('kpiTotal');
+      const kpiPending = document.getElementById('kpiPending');
+      const kpiReview = document.getElementById('kpiReview');
+      const kpiResolved = document.getElementById('kpiResolved');
+
+      let currentStatusFilter = 'all';
+      let activeComplaints = [];
+
+      // Toggle password eye
+      if (togglePassBtn && adminPasscodeInput) {
+        togglePassBtn.addEventListener('click', () => {
+          const isPassword = adminPasscodeInput.type === 'password';
+          adminPasscodeInput.type = isPassword ? 'text' : 'password';
+          eyeIcon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+      }
+
+      // Check initial auth state
+      const isInitiallyAuthenticated = {{ 'true' if authenticated else 'false' }};
+      if (isInitiallyAuthenticated) {
+        loadComplaints();
+      }
+
+      // Admin Login
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const code = adminPasscodeInput.value.trim();
+          if (!code) return;
+
+          try {
+            const res = await fetch('/api/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: code })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+              loginAlert.style.display = 'none';
+              loginView.style.display = 'none';
+              dashboardView.style.display = 'block';
+              logoutBtn.style.display = 'inline-flex';
+              showToast('Admin access granted.', 'success');
+              loadComplaints();
+            } else {
+              loginAlertMsg.textContent = data.error || 'Invalid passcode.';
+              loginAlert.style.display = 'block';
+            }
+          } catch (err) {
+            loginAlertMsg.textContent = 'Server error. Please verify your connection.';
+            loginAlert.style.display = 'block';
+          }
+        });
+      }
+
+      // Logout
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            dashboardView.style.display = 'none';
+            loginView.style.display = 'flex';
+            logoutBtn.style.display = 'none';
+            adminPasscodeInput.value = '';
+            showToast('Logged out successfully.', 'info');
+          } catch (err) {
+            window.location.reload();
+          }
+        });
+      }
+
+      // Refresh
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          loadComplaints();
+          showToast('Refreshed complaints feed.', 'info');
+        });
+      }
+
+      // Search debounce
+      let searchTimeout;
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(loadComplaints, 300);
+        });
+      }
+
+      // Category filter change
+      if (categoryFilter) {
+        categoryFilter.addEventListener('change', loadComplaints);
+      }
+
+      // Status tabs
+      if (statusTabs) {
+        const tabBtns = statusTabs.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentStatusFilter = btn.getAttribute('data-status');
+            loadComplaints();
+          });
+        });
+      }
+
+      // Fetch Complaints from Backend
+      async function loadComplaints() {
+        const q = searchInput ? searchInput.value.trim() : '';
+        const cat = categoryFilter ? categoryFilter.value : 'all';
+        const url = `/api/admin/complaints?status=${encodeURIComponent(currentStatusFilter)}&category=${encodeURIComponent(cat)}&q=${encodeURIComponent(q)}`;
+
+        try {
+          const res = await fetch(url);
+          if (res.status === 401) {
+            dashboardView.style.display = 'none';
+            loginView.style.display = 'flex';
+            logoutBtn.style.display = 'none';
+            return;
+          }
+
+          const data = await res.json();
+          if (data.success) {
+            activeComplaints = data.complaints;
+            updateStats(data.stats);
+            renderComplaints(activeComplaints);
+          }
+        } catch (err) {
+          console.error('Failed to load complaints', err);
+        }
+      }
+
+      function updateStats(stats) {
+        if (!stats) return;
+        kpiTotal.textContent = stats.total || 0;
+        kpiPending.textContent = stats.Pending || 0;
+        kpiReview.textContent = stats['Under Review'] || 0;
+        kpiResolved.textContent = stats.Resolved || 0;
+      }
+
+      function renderComplaints(items) {
+        if (!complaintsList) return;
+        complaintsList.innerHTML = '';
+
+        if (items.length === 0) {
+          complaintsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fa-solid fa-folder-open"></i>
+              <h3>No Complaints Found</h3>
+              <p>No student feedback matches the selected filters or search query.</p>
+            </div>
+          `;
+          return;
+        }
+
+        items.forEach(c => {
+          const card = document.createElement('div');
+          const statusClass = c.status === 'Under Review' ? 'review' : c.status.toLowerCase();
+          card.className = `complaint-card ${statusClass}`;
+
+          const isAnonymous = !c.student_name || c.student_name.toLowerCase() === 'anonymous';
+          const studentDisplay = isAnonymous ? '<span style="color: #94a3b8;"><i class="fa-solid fa-user-secret"></i> Anonymous Student</span>' : `<strong><i class="fa-solid fa-user"></i> ${escapeHtml(c.student_name)}</strong>`;
+          const gradeDisplay = c.grade_section ? `<span class="meta-item"><i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(c.grade_section)}</span>` : '';
+          const contactDisplay = c.contact_info ? `<span class="meta-item"><i class="fa-solid fa-address-book"></i> ${escapeHtml(c.contact_info)}</span>` : '';
+
+          card.innerHTML = `
+            <div class="card-top">
+              <div class="badge-wrap">
+                <span class="ticket-id">#${escapeHtml(c.ticket_id)}</span>
+                <span class="category-badge">${escapeHtml(c.category)}</span>
+              </div>
+              <span class="date-text"><i class="fa-regular fa-clock"></i> ${escapeHtml(c.created_at)}</span>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item">${studentDisplay}</span>
+              ${gradeDisplay}
+              ${contactDisplay}
+            </div>
+
+            <div class="card-subject">${escapeHtml(c.subject)}</div>
+            <div class="card-body">${escapeHtml(c.message)}</div>
+
+            <div class="card-actions-row">
+              <div class="status-select-wrap">
+                <label for="status_${c.ticket_id}">Status:</label>
+                <select id="status_${c.ticket_id}" class="status-dropdown ${statusClass}" data-ticket="${c.ticket_id}">
+                  <option value="Pending" ${c.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                  <option value="Under Review" ${c.status === 'Under Review' ? 'selected' : ''}>🔍 Under Review</option>
+                  <option value="Resolved" ${c.status === 'Resolved' ? 'selected' : ''}>✅ Resolved</option>
+                  <option value="Dismissed" ${c.status === 'Dismissed' ? 'selected' : ''}>📁 Dismissed</option>
+                </select>
+              </div>
+
+              <button class="btn-delete" data-ticket="${c.ticket_id}">
+                <i class="fa-solid fa-trash-can"></i> Delete
+              </button>
+            </div>
+
+            <div class="admin-notes-section">
+              <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px;">
+                <i class="fa-solid fa-pen-nib"></i> School Administration Action Note:
+              </div>
+              <div class="notes-box">
+                <input 
+                  type="text" 
+                  class="notes-input" 
+                  id="note_${c.ticket_id}" 
+                  placeholder="Record follow-up actions or notes..." 
+                  value="${escapeHtml(c.admin_notes || '')}"
+                >
+                <button class="btn-secondary btn-save-note" data-ticket="${c.ticket_id}" style="padding: 6px 14px; font-size: 0.82rem;">
+                  Save
+                </button>
+              </div>
+            </div>
+          `;
+
+          // Event Listeners for Card
+          const statusSelect = card.querySelector('.status-dropdown');
+          statusSelect.addEventListener('change', (e) => {
+            updateComplaintStatus(c.ticket_id, e.target.value);
+          });
+
+          const saveNoteBtn = card.querySelector('.btn-save-note');
+          const noteInput = card.querySelector('.notes-input');
+          saveNoteBtn.addEventListener('click', () => {
+            saveAdminNote(c.ticket_id, noteInput.value.trim());
+          });
+
+          const deleteBtn = card.querySelector('.btn-delete');
+          deleteBtn.addEventListener('click', () => {
+            if (confirm(`Are you sure you want to permanently delete complaint #${c.ticket_id}?`)) {
+              deleteComplaint(c.ticket_id);
+            }
+          });
+
+          complaintsList.appendChild(card);
+        });
+      }
+
+      async function updateComplaintStatus(ticketId, newStatus) {
+        try {
+          const res = await fetch(`/api/admin/complaints/${ticketId}/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast(`Complaint #${ticketId} status updated to ${newStatus}`, 'success');
+            loadComplaints();
+          } else {
+            showToast(data.error || 'Failed to update status', 'error');
+          }
+        } catch (err) {
+          showToast('Network error while updating status', 'error');
+        }
+      }
+
+      async function saveAdminNote(ticketId, note) {
+        try {
+          const res = await fetch(`/api/admin/complaints/${ticketId}/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_notes: note })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast(`Note saved for #${ticketId}`, 'success');
+          } else {
+            showToast(data.error || 'Failed to save note', 'error');
+          }
+        } catch (err) {
+          showToast('Network error while saving note', 'error');
+        }
+      }
+
+      async function deleteComplaint(ticketId) {
+        try {
+          const res = await fetch(`/api/admin/complaints/${ticketId}`, {
+            method: 'DELETE'
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast(`Complaint #${ticketId} deleted`, 'info');
+            loadComplaints();
+          } else {
+            showToast(data.error || 'Failed to delete complaint', 'error');
+          }
+        } catch (err) {
+          showToast('Network error while deleting', 'error');
+        }
+      }
+
+      function showToast(msg, type = 'info') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        if (!toast || !toastMsg) return;
+
+        toast.className = `toast show ${type}`;
+        toastMsg.textContent = msg;
+
+        setTimeout(() => {
+          toast.className = 'toast';
+        }, 3200);
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    });
+  </script>
+</body>
+</html>

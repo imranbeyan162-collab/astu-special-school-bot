@@ -1,6 +1,11 @@
 import os
 import re
-from flask import Flask, request, jsonify, render_template
+import sqlite3
+import random
+import csv
+import io
+from datetime import datetime
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -12,8 +17,49 @@ if not os.getenv("GROQ") and not os.getenv("GROQ_API_KEY"):
 app = Flask(__name__)
 CORS(app)
 
-ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+# Secret key for admin session management
+app.secret_key = os.getenv("SECRET_KEY", "astu_special_school_2026_complaint_key_xyz987")
 
+ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "complaints.db")
+ADMIN_CODE = os.getenv("ADMIN_CODE", "astu ss2026").strip().lower()
+
+# ==============================================================================
+# Database Initialization & Helpers
+# ==============================================================================
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    try:
+        with get_db() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS complaints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ticket_id TEXT UNIQUE NOT NULL,
+                    created_at TEXT NOT NULL,
+                    student_name TEXT,
+                    grade_section TEXT,
+                    contact_info TEXT,
+                    category TEXT NOT NULL,
+                    subject TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    admin_notes TEXT DEFAULT ''
+                );
+            """)
+            conn.commit()
+    except Exception as e:
+        print(f"Error initializing complaints database: {e}")
+
+# Initialize database
+init_db()
+
+# ==============================================================================
+# Knowledge Base & Prompts
+# ==============================================================================
 INFO = """ASTU Special School
 
 Location:
@@ -48,7 +94,10 @@ Contact:
 - Telegram: @ASTU_SPS
 
 School type:
-ASTU Special School is a non-boarding secondary school."""
+ASTU Special School is a non-boarding secondary school.
+
+Student Complaints & Feedback:
+Students can submit complaints, issues, or suggestions through the school's official Complaint & Feedback Portal (accessible via the Report/Complaint button or directly at /admin for school leaders). Submissions can be anonymous. The school administration receives and reviews all student feedback in the secure Admin Portal."""
 
 SYSTEM_PROMPT = f"""You are a friendly, welcoming, and interactive AI chatbot for ASTU Special School.
 
@@ -56,6 +105,7 @@ Personality and Behavior:
 - Always be warm, polite, and engaging with visitors.
 - When someone introduces themselves (for example, saying 'my name is Imran' or 'I am Sarah'), warmly greet them: 'Oh, welcome Imran! How are you doing today? How can I assist you regarding ASTU Special School?', and remember their name in the ongoing conversation.
 - When someone asks how you are, respond politely and ask how you can help them with ASTU Special School.
+- If a user asks about submitting a complaint, reporting a problem, or giving feedback, let them know that ASTU Special School has a direct student complaint portal where they can submit complaints (anonymously if desired), and school administrators review them in the Admin Portal.
 - For factual questions about ASTU Special School (location, directors, contact, programs, boarding), answer accurately based on the verified information below:
 ```{INFO}```
 
@@ -72,7 +122,9 @@ FEW_SHOT_MESSAGES = [
     {"role": "user", "content": "who is the director of astu special school"},
     {"role": "assistant", "content": "ASTU Special School director is Mr. Garedew Jima, and the Vice Director is Mr. Mekonen Kebede."},
     {"role": "user", "content": "how can i contact astu special school"},
-    {"role": "assistant", "content": "You can contact ASTU Special School through the following channels:\n- School phone: 022 211 8846\n- Email: astuss@gmail.com\n- Location: Adama, Ethiopia\n- Telegram: @ASTU_SPS"}
+    {"role": "assistant", "content": "You can contact ASTU Special School through the following channels:\n- School phone: 022 211 8846\n- Email: astuss@gmail.com\n- Location: Adama, Ethiopia\n- Telegram: @ASTU_SPS"},
+    {"role": "user", "content": "how can I submit a complaint or suggestion to the school?"},
+    {"role": "assistant", "content": "You can easily submit a complaint or suggestion directly to the school administration using our **Complaint & Feedback Portal**! Simply click the **'Complaint / Report'** button at the top or in the sidebar. You can choose to submit it anonymously or provide your details. School administrators receive and review all feedback in the Admin Portal."}
 ]
 
 def get_api_key():
@@ -113,11 +165,21 @@ def answer_from_verified_kb(question: str):
 
     # Friendly greeting
     if any(term in q for term in ["hello", "hi", "hey", "selam", "greetings", "good morning", "good afternoon"]):
-        return "👋 **Hello! Welcome to ASTU Special School AI Assistant.**\n\nHow are you doing today? I can help you with questions about our school campus, leadership, contacts, or academic programs."
+        return "👋 **Hello! Welcome to ASTU Special School AI Assistant.**\n\nHow are you doing today? I can help you with questions about our school campus, leadership, contacts, complaint submissions, or academic programs."
 
     # 'How are you'
     if "how are you" in q:
         return "I'm doing great, thank you for asking! How are you doing today? How can I assist you regarding ASTU Special School?"
+
+    # Complaint and suggestions inquiry
+    if any(term in q for term in ["complaint", "complain", "feedback", "suggestion", "report an issue", "report a problem", "admin portal"]):
+        return (
+            "📝 **ASTU Special School Complaint & Feedback System**\n\n"
+            "Students can submit complaints, issues, or suggestions directly to school administration:\n\n"
+            "- **Submit Feedback / Complaint**: Click the **'Complaint / Report'** button in the top navigation or sidebar.\n"
+            "- **Anonymous Option**: You can submit your message anonymously or include your name and grade.\n"
+            "- **Direct to Administration**: The school leadership receives and reviews submissions through the secure **Admin Portal**."
+        )
 
     # Location query
     if any(term in q for term in ["location", "located", "where is", "where does", "where's", "place", "city", "adama", "ethiopia"]):
@@ -177,6 +239,9 @@ def answer_from_verified_kb(question: str):
         "- @Fear_NF"
     )
 
+# ==============================================================================
+# Public Chat & Health Routes
+# ==============================================================================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -301,11 +366,233 @@ def chat():
             "error_detail": err_msg
         })
 
+# ==============================================================================
+# Student Complaints Submission API
+# ==============================================================================
+@app.route("/api/complaints", methods=["POST"])
+def submit_complaint():
+    data = request.get_json() or {}
+    category = data.get("category", "").strip()
+    subject = data.get("subject", "").strip()
+    message = data.get("message", "").strip()
+    student_name = data.get("student_name", "").strip() or "Anonymous"
+    grade_section = data.get("grade_section", "").strip()
+    contact_info = data.get("contact_info", "").strip()
+
+    if not category:
+        return jsonify({"error": "Please select a category for your complaint."}), 400
+    if not subject:
+        return jsonify({"error": "Please provide a subject line."}), 400
+    if not message:
+        return jsonify({"error": "Please provide the complaint details."}), 400
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    random_suffix = random.randint(1000, 9999)
+    ticket_id = f"ASTU-{random_suffix}"
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            # Ensure unique ticket id
+            cursor.execute("SELECT id FROM complaints WHERE ticket_id = ?", (ticket_id,))
+            while cursor.fetchone():
+                random_suffix = random.randint(1000, 9999)
+                ticket_id = f"ASTU-{random_suffix}"
+
+            cursor.execute("""
+                INSERT INTO complaints (ticket_id, created_at, student_name, grade_section, contact_info, category, subject, message, status, admin_notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', '')
+            """, (ticket_id, now, student_name, grade_section, contact_info, category, subject, message))
+            conn.commit()
+
+        return jsonify({
+            "success": True,
+            "ticket_id": ticket_id,
+            "message": "Complaint submitted successfully! School administration will review your submission."
+        }), 201
+    except Exception as e:
+        print(f"Error saving complaint: {e}")
+        return jsonify({"error": f"Failed to save complaint: {str(e)}"}), 500
+
+# ==============================================================================
+# Admin Portal & Authentication
+# ==============================================================================
+@app.route("/admin")
+def admin_page():
+    is_authenticated = session.get("is_admin") is True
+    return render_template("admin.html", authenticated=is_authenticated)
+
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json() or {}
+    code = data.get("code", "").strip().lower()
+
+    if code == ADMIN_CODE:
+        session["is_admin"] = True
+        return jsonify({
+            "success": True,
+            "message": "Admin authorization successful."
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "error": "Invalid admin access code. Please check your passcode and try again."
+        }), 401
+
+@app.route("/api/admin/logout", methods=["POST"])
+def admin_logout():
+    session.pop("is_admin", None)
+    return jsonify({
+        "success": True,
+        "message": "Logged out successfully."
+    })
+
+@app.route("/api/admin/complaints", methods=["GET"])
+def get_admin_complaints():
+    if not session.get("is_admin"):
+        return jsonify({"error": "Unauthorized. Admin authentication required."}), 401
+
+    status_filter = request.args.get("status", "").strip()
+    category_filter = request.args.get("category", "").strip()
+    search_query = request.args.get("q", "").strip().lower()
+
+    query = "SELECT * FROM complaints WHERE 1=1"
+    params = []
+
+    if status_filter and status_filter.lower() != "all":
+        query += " AND LOWER(status) = ?"
+        params.append(status_filter.lower())
+
+    if category_filter and category_filter.lower() != "all":
+        query += " AND LOWER(category) = ?"
+        params.append(category_filter.lower())
+
+    query += " ORDER BY id DESC"
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            complaints = [dict(row) for row in rows]
+
+            # In-memory search filter for multi-field coverage
+            if search_query:
+                complaints = [
+                    c for c in complaints
+                    if search_query in c["ticket_id"].lower()
+                    or search_query in c["subject"].lower()
+                    or search_query in c["message"].lower()
+                    or search_query in (c["student_name"] or "").lower()
+                    or search_query in (c["grade_section"] or "").lower()
+                    or search_query in (c["contact_info"] or "").lower()
+                ]
+
+            # Overall stats
+            cursor.execute("SELECT status, COUNT(*) as count FROM complaints GROUP BY status")
+            status_counts = cursor.fetchall()
+            stats = {"total": 0, "Pending": 0, "Under Review": 0, "Resolved": 0, "Dismissed": 0}
+            total = 0
+            for sc in status_counts:
+                s = sc["status"]
+                c = sc["count"]
+                total += c
+                stats[s] = c
+            stats["total"] = total
+
+        return jsonify({
+            "success": True,
+            "complaints": complaints,
+            "stats": stats
+        })
+    except Exception as e:
+        print(f"Error fetching complaints: {e}")
+        return jsonify({"error": f"Failed to retrieve complaints: {str(e)}"}), 500
+
+@app.route("/api/admin/complaints/<ticket_id>/update", methods=["POST"])
+def update_admin_complaint(ticket_id):
+    if not session.get("is_admin"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json() or {}
+    new_status = data.get("status")
+    admin_notes = data.get("admin_notes")
+
+    if not new_status and admin_notes is None:
+        return jsonify({"error": "Nothing to update."}), 400
+
+    updates = []
+    params = []
+    if new_status:
+        updates.append("status = ?")
+        params.append(new_status)
+    if admin_notes is not None:
+        updates.append("admin_notes = ?")
+        params.append(admin_notes)
+
+    params.append(ticket_id)
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"UPDATE complaints SET {', '.join(updates)} WHERE ticket_id = ?", params)
+            conn.commit()
+            if cursor.rowcount == 0:
+                return jsonify({"error": "Complaint not found."}), 404
+
+        return jsonify({"success": True, "message": f"Complaint {ticket_id} updated successfully."})
+    except Exception as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+@app.route("/api/admin/complaints/<ticket_id>", methods=["DELETE"])
+def delete_admin_complaint(ticket_id):
+    if not session.get("is_admin"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM complaints WHERE ticket_id = ?", (ticket_id,))
+            conn.commit()
+            if cursor.rowcount == 0:
+                return jsonify({"error": "Complaint not found."}), 404
+
+        return jsonify({"success": True, "message": f"Complaint {ticket_id} deleted successfully."})
+    except Exception as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+@app.route("/api/admin/export", methods=["GET"])
+def export_complaints():
+    if not session.get("is_admin"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT ticket_id, created_at, student_name, grade_section, contact_info, category, subject, message, status, admin_notes FROM complaints ORDER BY id DESC")
+            rows = cursor.fetchall()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Ticket ID", "Date Submitted", "Student Name", "Grade & Section", "Contact Info", "Category", "Subject", "Complaint Details", "Status", "Admin Notes"])
+        for row in rows:
+            writer.writerow(list(row))
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment;filename=ASTU_Special_School_Complaints_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
+        )
+    except Exception as e:
+        return jsonify({"error": f"Export error: {str(e)}"}), 500
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     print("=" * 60)
-    print("ASTU Special School AI Assistant Web Server")
-    print(f"Server running at: http://localhost:{port}")
+    print("ASTU Special School AI Assistant & Admin Portal")
+    print(f"Chatbot running at:     http://localhost:{port}")
+    print(f"Admin Portal running at: http://localhost:{port}/admin")
+    print(f"Admin Passcode:         astu ss2026")
     print("=" * 60)
     app.run(host="0.0.0.0", port=port, debug=debug_mode)

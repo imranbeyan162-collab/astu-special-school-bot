@@ -223,4 +223,123 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+
+  // ==========================================
+  // Student Complaint Modal Functionality
+  // ==========================================
+  const complaintModal = document.getElementById('complaintModal');
+  const openComplaintBtns = [
+    document.getElementById('sidebarComplaintBtn'),
+    document.getElementById('topbarComplaintBtn')
+  ];
+  const closeComplaintModalBtn = document.getElementById('closeComplaintModalBtn');
+  const cancelComplaintBtn = document.getElementById('cancelComplaintBtn');
+  const doneComplaintBtn = document.getElementById('doneComplaintBtn');
+  const complaintForm = document.getElementById('complaintForm');
+  const complaintSuccessState = document.getElementById('complaintSuccessState');
+  const ticketNumberDisplay = document.getElementById('ticketNumberDisplay');
+  const complaintFormAlert = document.getElementById('complaintFormAlert');
+  const submitComplaintBtn = document.getElementById('submitComplaintBtn');
+
+  function openComplaintModal() {
+    if (!complaintModal) return;
+    complaintModal.style.display = 'flex';
+    complaintSuccessState.style.display = 'none';
+    complaintForm.style.display = 'flex';
+    if (complaintFormAlert) complaintFormAlert.style.display = 'none';
+    const cat = document.getElementById('complaintCategory');
+    if (cat) cat.focus();
+  }
+
+  function closeComplaintModal() {
+    if (!complaintModal) return;
+    complaintModal.style.display = 'none';
+  }
+
+  window.openComplaintModal = openComplaintModal;
+
+  openComplaintBtns.forEach(btn => {
+    if (btn) btn.addEventListener('click', openComplaintModal);
+  });
+
+  if (closeComplaintModalBtn) closeComplaintModalBtn.addEventListener('click', closeComplaintModal);
+  if (cancelComplaintBtn) cancelComplaintBtn.addEventListener('click', closeComplaintModal);
+  if (doneComplaintBtn) doneComplaintBtn.addEventListener('click', closeComplaintModal);
+
+  // Close modal when clicking backdrop
+  if (complaintModal) {
+    complaintModal.addEventListener('click', (e) => {
+      if (e.target === complaintModal) {
+        closeComplaintModal();
+      }
+    });
+  }
+
+  // Submit Complaint Form
+  if (complaintForm) {
+    complaintForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const category = document.getElementById('complaintCategory').value;
+      const subject = document.getElementById('complaintSubject').value.trim();
+      const message = document.getElementById('complaintMessage').value.trim();
+      const studentName = document.getElementById('complaintName').value.trim();
+      const gradeSection = document.getElementById('complaintGrade').value.trim();
+      const contactInfo = document.getElementById('complaintContact').value.trim();
+
+      if (!category || !subject || !message) {
+        if (complaintFormAlert) {
+          complaintFormAlert.textContent = 'Please fill out all required fields marked with *';
+          complaintFormAlert.style.display = 'block';
+        }
+        return;
+      }
+
+      if (submitComplaintBtn) {
+        submitComplaintBtn.disabled = true;
+        submitComplaintBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+      }
+
+      try {
+        const res = await fetch('/api/complaints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: category,
+            subject: subject,
+            message: message,
+            student_name: studentName,
+            grade_section: gradeSection,
+            contact_info: contactInfo
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          complaintForm.reset();
+          complaintForm.style.display = 'none';
+          complaintSuccessState.style.display = 'block';
+          if (ticketNumberDisplay) {
+            ticketNumberDisplay.textContent = `#${data.ticket_id}`;
+          }
+        } else {
+          if (complaintFormAlert) {
+            complaintFormAlert.textContent = data.error || 'Failed to submit complaint. Please try again.';
+            complaintFormAlert.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        if (complaintFormAlert) {
+          complaintFormAlert.textContent = 'Network error. Please check your connection and try again.';
+          complaintFormAlert.style.display = 'block';
+        }
+      } finally {
+        if (submitComplaintBtn) {
+          submitComplaintBtn.disabled = false;
+          submitComplaintBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Submit Complaint</span>';
+        }
+      }
+    });
+  }
 });

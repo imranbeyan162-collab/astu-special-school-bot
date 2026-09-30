@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=2.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
 </head>
 <body>
   <div class="app-layout">
@@ -89,6 +89,18 @@
         </ul>
       </div>
 
+      <!-- Student Complaint Submission CTA -->
+      <div class="complaint-cta-card">
+        <div class="cta-header">
+          <i class="fa-solid fa-bullhorn"></i>
+          <span>Student Feedback</span>
+        </div>
+        <p>Have an issue, suggestion, or complaint? Submit directly to the school administration.</p>
+        <button class="btn-complaint-cta" id="sidebarComplaintBtn">
+          <i class="fa-solid fa-pen-to-square"></i> Submit Complaint
+        </button>
+      </div>
+
       <!-- Developer / Information Feedback Card -->
       <div class="dev-card">
         <div class="dev-header">
@@ -100,6 +112,14 @@
           <a href="https://t.me/GTRXBomerance" target="_blank" class="dev-btn"><i class="fa-brands fa-telegram"></i> @GTRXBomerance</a>
           <a href="https://t.me/Fear_NF" target="_blank" class="dev-btn"><i class="fa-brands fa-telegram"></i> @Fear_NF</a>
         </div>
+      </div>
+
+      <!-- Admin Portal Link -->
+      <div class="admin-portal-link-box">
+        <a href="/admin" target="_blank" class="admin-link-btn" title="School Administration Portal">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Admin Portal (Code: astu ss2026)</span>
+        </a>
       </div>
     </aside>
 
@@ -122,6 +142,14 @@
         </div>
 
         <div class="topbar-actions">
+          <button class="action-btn complaint-top-btn" id="topbarComplaintBtn" title="Submit student complaint or feedback">
+            <i class="fa-solid fa-bullhorn"></i>
+            <span>Complaint / Report</span>
+          </button>
+          <a href="/admin" target="_blank" class="action-btn admin-top-btn" title="Administration Portal">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Admin</span>
+          </a>
           <button class="action-btn" id="clearChatBtn" title="Restart conversation">
             <i class="fa-solid fa-rotate-right"></i>
             <span>Restart</span>
@@ -153,6 +181,9 @@
               <button class="chip" data-prompt="How can I contact ASTU Special School?">
                 <i class="fa-solid fa-phone"></i> Contact channels & phone
               </button>
+              <button class="chip" data-prompt="How do I submit a complaint or suggestion to the school?">
+                <i class="fa-solid fa-bullhorn"></i> Submit student complaint
+              </button>
               <button class="chip" data-prompt="What does ASTU Special School promote and what is its focus?">
                 <i class="fa-solid fa-microscope"></i> What does the school promote?
               </button>
@@ -181,7 +212,7 @@
           <div class="input-wrapper">
             <textarea 
               id="userInput" 
-              placeholder="Ask anything about ASTU Special School... (e.g. location, admission, directors)" 
+              placeholder="Ask anything about ASTU Special School... (e.g. location, admission, complaints)" 
               rows="1" 
               autocomplete="off"
             ></textarea>
@@ -199,6 +230,98 @@
 
   </div>
 
-  <script src="/static/js/chat.js?v=2.0"></script>
+  <!-- Student Complaint & Feedback Modal -->
+  <div class="modal-backdrop" id="complaintModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon"><i class="fa-solid fa-bullhorn"></i></div>
+          <div>
+            <h3>Submit Student Complaint / Feedback</h3>
+            <p>Direct communication to ASTU Special School Administration</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeComplaintModalBtn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Complaint Form -->
+      <form id="complaintForm" class="modal-body">
+        <div class="form-banner">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Your voice matters. You can submit <strong>anonymously</strong> by leaving the name field blank.</span>
+        </div>
+
+        <div id="complaintFormAlert" class="form-alert" style="display: none;"></div>
+
+        <div class="form-group">
+          <label for="complaintCategory">Category <span class="req">*</span></label>
+          <select id="complaintCategory" required>
+            <option value="" disabled selected>Select complaint category...</option>
+            <option value="Academic & Teachers">Academic & Teachers</option>
+            <option value="Facilities & Campus">Facilities & Classrooms</option>
+            <option value="Cafeteria & Dining">Cafeteria & Food Services</option>
+            <option value="Discipline & Student Welfare">Discipline & Student Welfare</option>
+            <option value="Administration & Registry">Administration & Registry</option>
+            <option value="Extracurricular & Sports">Extracurricular & Sports</option>
+            <option value="General Suggestion">General Suggestion / Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="complaintSubject">Subject / Summary <span class="req">*</span></label>
+          <input type="text" id="complaintSubject" placeholder="e.g. Physics lab equipment shortage or library hours" required maxlength="120">
+        </div>
+
+        <div class="form-group">
+          <label for="complaintMessage">Detailed Description <span class="req">*</span></label>
+          <textarea id="complaintMessage" rows="4" placeholder="Describe the issue, suggestions, or details so the administration can investigate..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="complaintName">Student Name <span class="opt">(Optional - leave blank for Anonymous)</span></label>
+            <input type="text" id="complaintName" placeholder="e.g. Imran (or leave blank)">
+          </div>
+          <div class="form-group col-half">
+            <label for="complaintGrade">Grade & Section <span class="opt">(Optional)</span></label>
+            <input type="text" id="complaintGrade" placeholder="e.g. Grade 11-A">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="complaintContact">Contact Information <span class="opt">(Optional - Telegram handle or phone)</span></label>
+          <input type="text" id="complaintContact" placeholder="e.g. @your_telegram or 09xxxxxxxx">
+        </div>
+
+        <div class="form-footer">
+          <button type="button" class="btn-cancel" id="cancelComplaintBtn">Cancel</button>
+          <button type="submit" class="btn-submit-complaint" id="submitComplaintBtn">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Submit Complaint</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Success Screen -->
+      <div id="complaintSuccessState" class="modal-success" style="display: none;">
+        <div class="success-icon-box">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3>Submitted Successfully!</h3>
+        <p>Your complaint has been forwarded directly to the ASTU Special School administration portal.</p>
+        <div class="ticket-box">
+          <span>Ticket Reference ID:</span>
+          <strong id="ticketNumberDisplay">#ASTU-0000</strong>
+        </div>
+        <p class="success-hint">The school administration reviews all submissions and takes necessary action.</p>
+        <button type="button" class="btn-primary-done" id="doneComplaintBtn">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/js/chat.js?v=3.0"></script>
 </body>
 </html>
