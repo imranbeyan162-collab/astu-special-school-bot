@@ -342,4 +342,175 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================
+  // Complaint Tracking & School Response Logic
+  // ==========================================
+  const tabSubmitBtn = document.getElementById('tabSubmitBtn');
+  const tabTrackBtn = document.getElementById('tabTrackBtn');
+  const submitView = document.getElementById('submitView');
+  const trackView = document.getElementById('trackView');
+
+  const trackForm = document.getElementById('trackForm');
+  const trackTicketInput = document.getElementById('trackTicketInput');
+  const btnTrackSubmit = document.getElementById('btnTrackSubmit');
+  const trackAlert = document.getElementById('trackAlert');
+  const trackResultView = document.getElementById('trackResultView');
+  const trackResultTicket = document.getElementById('trackResultTicket');
+  const trackResultCategory = document.getElementById('trackResultCategory');
+  const trackResultStatus = document.getElementById('trackResultStatus');
+  const trackResultDate = document.getElementById('trackResultDate');
+  const trackResultSubject = document.getElementById('trackResultSubject');
+  const trackResultMessage = document.getElementById('trackResultMessage');
+  const trackResultAdminResponse = document.getElementById('trackResultAdminResponse');
+  const schoolReplyContainer = document.getElementById('schoolReplyContainer');
+  const btnTrackAnother = document.getElementById('btnTrackAnother');
+  const trackNowFromSuccessBtn = document.getElementById('trackNowFromSuccessBtn');
+  const sidebarTrackBtn = document.getElementById('sidebarTrackBtn');
+  const topbarTrackBtn = document.getElementById('topbarTrackBtn');
+
+  function switchToSubmitTab() {
+    if (tabSubmitBtn) tabSubmitBtn.classList.add('active');
+    if (tabTrackBtn) tabTrackBtn.classList.remove('active');
+    if (submitView) submitView.style.display = 'block';
+    if (trackView) trackView.style.display = 'none';
+  }
+
+  function switchToTrackTab(prefillTicket = '') {
+    if (tabSubmitBtn) tabSubmitBtn.classList.remove('active');
+    if (tabTrackBtn) tabTrackBtn.classList.add('active');
+    if (submitView) submitView.style.display = 'none';
+    if (trackView) trackView.style.display = 'block';
+    if (trackAlert) trackAlert.style.display = 'none';
+
+    if (prefillTicket && trackTicketInput) {
+      trackTicketInput.value = prefillTicket;
+      performTrack(prefillTicket);
+    } else {
+      if (trackResultView) trackResultView.style.display = 'none';
+      if (trackForm) trackForm.style.display = 'block';
+      if (trackTicketInput) trackTicketInput.focus();
+    }
+  }
+
+  if (tabSubmitBtn) tabSubmitBtn.addEventListener('click', switchToSubmitTab);
+  if (tabTrackBtn) tabTrackBtn.addEventListener('click', () => switchToTrackTab());
+
+  if (sidebarTrackBtn) {
+    sidebarTrackBtn.addEventListener('click', () => {
+      openComplaintModal();
+      switchToTrackTab();
+    });
+  }
+
+  if (topbarTrackBtn) {
+    topbarTrackBtn.addEventListener('click', () => {
+      openComplaintModal();
+      switchToTrackTab();
+    });
+  }
+
+  if (trackNowFromSuccessBtn) {
+    trackNowFromSuccessBtn.addEventListener('click', () => {
+      const code = ticketNumberDisplay ? ticketNumberDisplay.textContent.replace('#', '') : '';
+      switchToTrackTab(code);
+    });
+  }
+
+  if (btnTrackAnother) {
+    btnTrackAnother.addEventListener('click', () => {
+      if (trackResultView) trackResultView.style.display = 'none';
+      if (trackForm) trackForm.style.display = 'block';
+      if (trackTicketInput) {
+        trackTicketInput.value = '';
+        trackTicketInput.focus();
+      }
+    });
+  }
+
+  if (trackForm) {
+    trackForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = trackTicketInput ? trackTicketInput.value.trim() : '';
+      if (!code) return;
+      performTrack(code);
+    });
+  }
+
+  async function performTrack(ticketId) {
+    if (!ticketId) return;
+    if (btnTrackSubmit) {
+      btnTrackSubmit.disabled = true;
+      btnTrackSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+    }
+    if (trackAlert) trackAlert.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/complaints/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_id: ticketId })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const c = data.complaint;
+        if (trackResultTicket) trackResultTicket.textContent = `#${c.ticket_id}`;
+        if (trackResultCategory) trackResultCategory.textContent = c.category;
+        if (trackResultDate) trackResultDate.textContent = c.created_at;
+        if (trackResultSubject) trackResultSubject.textContent = c.subject;
+        if (trackResultMessage) trackResultMessage.textContent = c.message;
+
+        if (trackResultStatus) {
+          let statusClass = 'pending';
+          let statusText = '⏳ Pending Review';
+          if (c.status === 'Under Review') {
+            statusClass = 'review';
+            statusText = '🔍 Under Review by Leadership';
+          } else if (c.status === 'Resolved') {
+            statusClass = 'resolved';
+            statusText = '✅ Resolved & Addressed';
+          } else if (c.status === 'Dismissed') {
+            statusClass = 'dismissed';
+            statusText = '📁 Closed / Dismissed';
+          }
+          trackResultStatus.className = `status-pill ${statusClass}`;
+          trackResultStatus.textContent = statusText;
+        }
+
+        if (trackResultAdminResponse && schoolReplyContainer) {
+          if (c.admin_response && c.admin_response.trim()) {
+            schoolReplyContainer.className = 'school-reply-container';
+            trackResultAdminResponse.innerHTML = `<p>${escapeHtml(c.admin_response)}</p>`;
+          } else {
+            schoolReplyContainer.className = 'school-reply-container waiting';
+            trackResultAdminResponse.innerHTML = `
+              <div class="reply-waiting-text">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span>Your complaint has been received and is undergoing review by school leadership. The administration's response will appear here once evaluated. Please check back soon.</span>
+              </div>
+            `;
+          }
+        }
+
+        if (trackForm) trackForm.style.display = 'none';
+        if (trackResultView) trackResultView.style.display = 'block';
+      } else {
+        if (trackAlert) {
+          trackAlert.textContent = data.error || 'No complaint found matching this code.';
+          trackAlert.style.display = 'block';
+        }
+      }
+    } catch (err) {
+      if (trackAlert) {
+        trackAlert.textContent = 'Network error while checking response. Please try again.';
+        trackAlert.style.display = 'block';
+      }
+    } finally {
+      if (btnTrackSubmit) {
+        btnTrackSubmit.disabled = false;
+        btnTrackSubmit.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> <span>Check Response</span>';
+      }
+    }
+  }
 });

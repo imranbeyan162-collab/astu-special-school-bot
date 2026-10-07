@@ -97,7 +97,7 @@ School type:
 ASTU Special School is a non-boarding secondary school.
 
 Student Complaints & Feedback:
-Students can submit complaints, issues, or suggestions through the school's official Complaint & Feedback Portal (accessible via the Report/Complaint button or directly at /admin for school leaders). Submissions can be anonymous. The school administration receives and reviews all student feedback in the secure Admin Portal."""
+Students can submit complaints, issues, or suggestions through the school's official Complaint & Feedback Portal (accessible via the Report/Complaint button or directly at /admin for school leaders). Submissions can be anonymous. Each submission receives a unique ticket code (e.g. ASTU-4821). Students can check the school administration's official reply anytime by entering their code in the 'Check Response' tracker. The school administration reviews and manages all student feedback in the secure Admin Portal."""
 
 SYSTEM_PROMPT = f"""You are a friendly, welcoming, and interactive AI chatbot for ASTU Special School.
 
@@ -172,13 +172,13 @@ def answer_from_verified_kb(question: str):
         return "I'm doing great, thank you for asking! How are you doing today? How can I assist you regarding ASTU Special School?"
 
     # Complaint and suggestions inquiry
-    if any(term in q for term in ["complaint", "complain", "feedback", "suggestion", "report an issue", "report a problem", "admin portal"]):
+    if any(term in q for term in ["complaint", "complain", "feedback", "suggestion", "report an issue", "report a problem", "admin portal", "check response", "track complaint", "check complaint", "reply"]):
         return (
             "📝 **ASTU Special School Complaint & Feedback System**\n\n"
-            "Students can submit complaints, issues, or suggestions directly to school administration:\n\n"
-            "- **Submit Feedback / Complaint**: Click the **'Complaint / Report'** button in the top navigation or sidebar.\n"
-            "- **Anonymous Option**: You can submit your message anonymously or include your name and grade.\n"
-            "- **Direct to Administration**: The school leadership receives and reviews submissions through the secure **Admin Portal**."
+            "Students can submit complaints and track school responses directly:\n\n"
+            "- **Submit Feedback / Complaint**: Click the **'Complaint'** button in the navigation or sidebar (can be 100% anonymous).\n"
+            "- **Ticket Reference Code**: When you submit, you will receive a unique ticket code (e.g. `ASTU-4821`).\n"
+            "- **Check School Response**: Click **'Check Response'** and enter your code to view the official review and reply written by school administration!"
         )
 
     # Location query
@@ -413,6 +413,52 @@ def submit_complaint():
     except Exception as e:
         print(f"Error saving complaint: {e}")
         return jsonify({"error": f"Failed to save complaint: {str(e)}"}), 500
+
+@app.route("/api/complaints/track", methods=["POST"])
+def track_complaint():
+    data = request.get_json() or {}
+    raw_code = data.get("ticket_id", "").strip().upper()
+
+    # Normalization: handle '#ASTU-1234', '1234', 'ASTU-1234', 'astu-1234'
+    code = raw_code.lstrip("#")
+    if not code.startswith("ASTU-") and code.isdigit():
+        code = f"ASTU-{code}"
+
+    if not code:
+        return jsonify({"error": "Please enter your complaint reference code."}), 400
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT ticket_id, created_at, category, subject, message, status, admin_notes
+                FROM complaints
+                WHERE UPPER(ticket_id) = ?
+            """, (code,))
+            row = cursor.fetchone()
+
+        if not row:
+            return jsonify({
+                "success": False,
+                "error": f"No complaint found matching ticket code '{raw_code}'. Please double-check your code and try again."
+            }), 404
+
+        comp = dict(row)
+        return jsonify({
+            "success": True,
+            "complaint": {
+                "ticket_id": comp["ticket_id"],
+                "created_at": comp["created_at"],
+                "category": comp["category"],
+                "subject": comp["subject"],
+                "message": comp["message"],
+                "status": comp["status"],
+                "admin_response": comp["admin_notes"] or ""
+            }
+        })
+    except Exception as e:
+        print(f"Error tracking complaint: {e}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 # ==============================================================================
 # Admin Portal & Authentication

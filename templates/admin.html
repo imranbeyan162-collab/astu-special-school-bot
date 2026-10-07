@@ -1082,19 +1082,19 @@
             </div>
 
             <div class="admin-notes-section">
-              <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px;">
-                <i class="fa-solid fa-pen-nib"></i> School Administration Action Note:
+              <div style="font-size: 0.82rem; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">
+                <i class="fa-solid fa-reply"></i> Official School Reply to Student (Visible when student enters their code in 'Check Response'):
               </div>
               <div class="notes-box">
                 <input 
                   type="text" 
                   class="notes-input" 
                   id="note_${c.ticket_id}" 
-                  placeholder="Record follow-up actions or notes..." 
+                  placeholder="Type official response to student (e.g., 'Discussed with department head, tutorial sessions will be added...')" 
                   value="${escapeHtml(c.admin_notes || '')}"
                 >
-                <button class="btn-secondary btn-save-note" data-ticket="${c.ticket_id}" style="padding: 6px 14px; font-size: 0.82rem;">
-                  Save
+                <button class="btn-secondary btn-save-note" data-ticket="${c.ticket_id}" style="padding: 6px 16px; font-size: 0.82rem; background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700;">
+                  <i class="fa-solid fa-paper-plane"></i> Save Reply
                 </button>
               </div>
             </div>
@@ -1151,7 +1151,7 @@
           });
           const data = await res.json();
           if (data.success) {
-            showToast(`Note saved for #${ticketId}`, 'success');
+            showToast(`Official reply saved for #${ticketId}`, 'success');
           } else {
             showToast(data.error || 'Failed to save note', 'error');
           }

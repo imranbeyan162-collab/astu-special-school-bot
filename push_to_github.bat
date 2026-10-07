@@ -1,24 +1,24 @@
 @echo off
 title Push ASTU Special School Updates to GitHub
 echo ======================================================================
-echo Pushing ASTU Special School Bot and Admin Portal to GitHub
+echo Pushing ASTU Special School Bot, Tracker and Admin Portal to GitHub
 echo ======================================================================
 cd /d "%~dp0"
 
-:: Fix missing /tmp environment for Windows Git
+:: Fix missing /tmp directory for Windows Git
 if not exist "C:\tmp" mkdir "C:\tmp" 2>nul
 set "TEMP=C:\tmp"
 set "TMP=C:\tmp"
 
-:: Clear inherited askpass wrappers from terminal
+:: Clear broken askpass environment variables
 set "GIT_ASKPASS="
 set "SSH_ASKPASS="
 
 echo [1/3] Staging changes...
 git add .
 
-echo [2/3] Checking commit...
-git commit -m "Add student complaint system and admin portal with passcode astu ss2026" 2>nul
+echo [2/3] Committing changes...
+git commit -m "Add complaint tracking system for students to view official school replies and hide admin passcode from public button" 2>nul
 
 echo [3/3] Pushing to remote repository...
 git push origin main

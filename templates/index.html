@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=4.0">
 </head>
 <body>
   <div class="app-layout">
@@ -89,16 +89,21 @@
         </ul>
       </div>
 
-      <!-- Student Complaint Submission CTA -->
+      <!-- Student Complaint & Tracking CTA -->
       <div class="complaint-cta-card">
         <div class="cta-header">
           <i class="fa-solid fa-bullhorn"></i>
           <span>Student Feedback</span>
         </div>
-        <p>Have an issue, suggestion, or complaint? Submit directly to the school administration.</p>
-        <button class="btn-complaint-cta" id="sidebarComplaintBtn">
-          <i class="fa-solid fa-pen-to-square"></i> Submit Complaint
-        </button>
+        <p>Submit an issue or suggestion, or check the school administration's official response using your ticket code.</p>
+        <div class="cta-btn-group">
+          <button class="btn-complaint-cta" id="sidebarComplaintBtn">
+            <i class="fa-solid fa-pen-to-square"></i> Submit Complaint
+          </button>
+          <button class="btn-track-cta" id="sidebarTrackBtn">
+            <i class="fa-solid fa-magnifying-glass"></i> Check School Response
+          </button>
+        </div>
       </div>
 
       <!-- Developer / Information Feedback Card -->
@@ -114,7 +119,7 @@
         </div>
       </div>
 
-      <!-- Admin Portal Link -->
+      <!-- Admin Portal Link (Code is confidential) -->
       <div class="admin-portal-link-box">
         <a href="/admin" target="_blank" class="admin-link-btn" title="School Administration Portal">
           <i class="fa-solid fa-shield-halved"></i>
@@ -144,7 +149,11 @@
         <div class="topbar-actions">
           <button class="action-btn complaint-top-btn" id="topbarComplaintBtn" title="Submit student complaint or feedback">
             <i class="fa-solid fa-bullhorn"></i>
-            <span>Complaint / Report</span>
+            <span>Complaint</span>
+          </button>
+          <button class="action-btn track-top-btn" id="topbarTrackBtn" title="Check school response to your complaint">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Check Response</span>
           </button>
           <a href="/admin" target="_blank" class="action-btn admin-top-btn" title="Administration Portal">
             <i class="fa-solid fa-shield-halved"></i>
@@ -184,11 +193,11 @@
               <button class="chip" data-prompt="How do I submit a complaint or suggestion to the school?">
                 <i class="fa-solid fa-bullhorn"></i> Submit student complaint
               </button>
+              <button class="chip" data-prompt="How do I check the school's response to my complaint?">
+                <i class="fa-solid fa-envelope-open-text"></i> Check response to my complaint
+              </button>
               <button class="chip" data-prompt="What does ASTU Special School promote and what is its focus?">
                 <i class="fa-solid fa-microscope"></i> What does the school promote?
-              </button>
-              <button class="chip" data-prompt="Is ASTU Special School a boarding school?">
-                <i class="fa-solid fa-bed"></i> Is it a boarding school?
               </button>
             </div>
           </div>
@@ -230,98 +239,190 @@
 
   </div>
 
-  <!-- Student Complaint & Feedback Modal -->
+  <!-- Student Complaint & Status Tracking Modal -->
   <div class="modal-backdrop" id="complaintModal" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon"><i class="fa-solid fa-bullhorn"></i></div>
           <div>
-            <h3>Submit Student Complaint / Feedback</h3>
-            <p>Direct communication to ASTU Special School Administration</p>
+            <h3>ASTU Complaints & Response Tracker</h3>
+            <p>Direct communication with ASTU Special School Administration</p>
           </div>
         </div>
         <button class="modal-close-btn" id="closeComplaintModalBtn" aria-label="Close modal">&times;</button>
       </div>
 
-      <!-- Complaint Form -->
-      <form id="complaintForm" class="modal-body">
+      <!-- Navigation Tabs Inside Modal -->
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" id="tabSubmitBtn">
+          <i class="fa-solid fa-pen-to-square"></i> Submit Complaint
+        </button>
+        <button type="button" class="modal-tab-btn" id="tabTrackBtn">
+          <i class="fa-solid fa-magnifying-glass"></i> Check School Response
+        </button>
+      </div>
+
+      <!-- VIEW 1: Complaint Submission -->
+      <div id="submitView">
+        <form id="complaintForm" class="modal-body">
+          <div class="form-banner">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Your feedback matters. You can submit <strong>anonymously</strong>. You will receive a code to check the school's response.</span>
+          </div>
+
+          <div id="complaintFormAlert" class="form-alert" style="display: none;"></div>
+
+          <div class="form-group">
+            <label for="complaintCategory">Category <span class="req">*</span></label>
+            <select id="complaintCategory" required>
+              <option value="" disabled selected>Select complaint category...</option>
+              <option value="Academic & Teachers">Academic & Teachers</option>
+              <option value="Facilities & Campus">Facilities & Classrooms</option>
+              <option value="Cafeteria & Dining">Cafeteria & Food Services</option>
+              <option value="Discipline & Student Welfare">Discipline & Student Welfare</option>
+              <option value="Administration & Registry">Administration & Registry</option>
+              <option value="Extracurricular & Sports">Extracurricular & Sports</option>
+              <option value="General Suggestion">General Suggestion / Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="complaintSubject">Subject / Summary <span class="req">*</span></label>
+            <input type="text" id="complaintSubject" placeholder="e.g. Physics class teacher issue or library hours" required maxlength="120">
+          </div>
+
+          <div class="form-group">
+            <label for="complaintMessage">Detailed Description <span class="req">*</span></label>
+            <textarea id="complaintMessage" rows="4" placeholder="Describe the issue or suggestions so the administration can investigate and respond..." required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="complaintName">Student Name <span class="opt">(Optional - leave blank for Anonymous)</span></label>
+              <input type="text" id="complaintName" placeholder="e.g. Imran (or leave blank)">
+            </div>
+            <div class="form-group col-half">
+              <label for="complaintGrade">Grade & Section <span class="opt">(Optional)</span></label>
+              <input type="text" id="complaintGrade" placeholder="e.g. Grade 11-A">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="complaintContact">Contact Information <span class="opt">(Optional - Telegram handle or phone)</span></label>
+            <input type="text" id="complaintContact" placeholder="e.g. @your_telegram or 09xxxxxxxx">
+          </div>
+
+          <div class="form-footer">
+            <button type="button" class="btn-cancel" id="cancelComplaintBtn">Cancel</button>
+            <button type="submit" class="btn-submit-complaint" id="submitComplaintBtn">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Complaint</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Success Screen -->
+        <div id="complaintSuccessState" class="modal-success" style="display: none;">
+          <div class="success-icon-box">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <h3>Submitted Successfully!</h3>
+          <p>Your complaint has been delivered to ASTU Special School administration.</p>
+          <div class="ticket-box">
+            <span>Your Personal Complaint Code:</span>
+            <strong id="ticketNumberDisplay">#ASTU-0000</strong>
+          </div>
+          <p class="success-hint">
+            <strong>Save this code!</strong> You can enter it in the <strong>"Check School Response"</strong> tab anytime to see the administration's official reply.
+          </p>
+          <div class="success-actions-row">
+            <button type="button" class="btn-track-action" id="trackNowFromSuccessBtn">
+              <i class="fa-solid fa-magnifying-glass"></i> Check Status Now
+            </button>
+            <button type="button" class="btn-primary-done" id="doneComplaintBtn">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Track Complaint & Check School Response Form -->
+      <div id="trackView" class="modal-body" style="display: none;">
         <div class="form-banner">
-          <i class="fa-solid fa-user-shield"></i>
-          <span>Your voice matters. You can submit <strong>anonymously</strong> by leaving the name field blank.</span>
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Enter the ticket code given to you when you submitted (e.g. <strong>ASTU-4821</strong> or <strong>4821</strong>) to view the school's reply.</span>
         </div>
 
-        <div id="complaintFormAlert" class="form-alert" style="display: none;"></div>
+        <div id="trackAlert" class="form-alert" style="display: none;"></div>
 
-        <div class="form-group">
-          <label for="complaintCategory">Category <span class="req">*</span></label>
-          <select id="complaintCategory" required>
-            <option value="" disabled selected>Select complaint category...</option>
-            <option value="Academic & Teachers">Academic & Teachers</option>
-            <option value="Facilities & Campus">Facilities & Classrooms</option>
-            <option value="Cafeteria & Dining">Cafeteria & Food Services</option>
-            <option value="Discipline & Student Welfare">Discipline & Student Welfare</option>
-            <option value="Administration & Registry">Administration & Registry</option>
-            <option value="Extracurricular & Sports">Extracurricular & Sports</option>
-            <option value="General Suggestion">General Suggestion / Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="complaintSubject">Subject / Summary <span class="req">*</span></label>
-          <input type="text" id="complaintSubject" placeholder="e.g. Physics lab equipment shortage or library hours" required maxlength="120">
-        </div>
-
-        <div class="form-group">
-          <label for="complaintMessage">Detailed Description <span class="req">*</span></label>
-          <textarea id="complaintMessage" rows="4" placeholder="Describe the issue, suggestions, or details so the administration can investigate..." required></textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group col-half">
-            <label for="complaintName">Student Name <span class="opt">(Optional - leave blank for Anonymous)</span></label>
-            <input type="text" id="complaintName" placeholder="e.g. Imran (or leave blank)">
+        <!-- Search Form -->
+        <form id="trackForm" class="track-form-box">
+          <div class="form-group">
+            <label for="trackTicketInput">Complaint Reference Code <span class="req">*</span></label>
+            <div class="track-input-group">
+              <input 
+                type="text" 
+                id="trackTicketInput" 
+                placeholder="e.g. ASTU-4821 or 4821" 
+                autocomplete="off" 
+                required
+              >
+              <button type="submit" id="btnTrackSubmit" class="btn-submit-complaint">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Check Response</span>
+              </button>
+            </div>
           </div>
-          <div class="form-group col-half">
-            <label for="complaintGrade">Grade & Section <span class="opt">(Optional)</span></label>
-            <input type="text" id="complaintGrade" placeholder="e.g. Grade 11-A">
+        </form>
+
+        <!-- Track Result Card -->
+        <div id="trackResultView" class="track-result-box" style="display: none;">
+          <div class="track-card-header">
+            <div class="track-tag-wrap">
+              <span class="track-ticket-tag" id="trackResultTicket">#ASTU-0000</span>
+              <span class="category-badge" id="trackResultCategory">Academic</span>
+            </div>
+            <span class="status-pill" id="trackResultStatus">⏳ Pending Review</span>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="complaintContact">Contact Information <span class="opt">(Optional - Telegram handle or phone)</span></label>
-          <input type="text" id="complaintContact" placeholder="e.g. @your_telegram or 09xxxxxxxx">
-        </div>
+          <div class="track-meta-row">
+            <i class="fa-regular fa-clock"></i> Submitted: <span id="trackResultDate">--</span>
+          </div>
 
-        <div class="form-footer">
-          <button type="button" class="btn-cancel" id="cancelComplaintBtn">Cancel</button>
-          <button type="submit" class="btn-submit-complaint" id="submitComplaintBtn">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span>Submit Complaint</span>
+          <div class="track-subject-heading">
+            <span>Subject:</span> <strong id="trackResultSubject">Complaint Subject</strong>
+          </div>
+          
+          <div class="track-original-message">
+            <div class="orig-label"><i class="fa-solid fa-file-lines"></i> Your Complaint Message:</div>
+            <p id="trackResultMessage">Original text...</p>
+          </div>
+
+          <!-- Official School Response Box -->
+          <div class="school-reply-container" id="schoolReplyContainer">
+            <div class="reply-card-header">
+              <div class="reply-seal"><i class="fa-solid fa-graduation-cap"></i></div>
+              <div>
+                <h4>ASTU Special School Administration Response</h4>
+                <span class="reply-sub">Official school administration feedback</span>
+              </div>
+            </div>
+            <div class="reply-body" id="trackResultAdminResponse">
+              <!-- Admin reply or waiting state injected here -->
+            </div>
+          </div>
+
+          <button type="button" class="btn-cancel" id="btnTrackAnother" style="width: 100%; justify-content: center; margin-top: 14px;">
+            <i class="fa-solid fa-rotate-left"></i> Check Another Code
           </button>
         </div>
-      </form>
 
-      <!-- Success Screen -->
-      <div id="complaintSuccessState" class="modal-success" style="display: none;">
-        <div class="success-icon-box">
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
-        <h3>Submitted Successfully!</h3>
-        <p>Your complaint has been forwarded directly to the ASTU Special School administration portal.</p>
-        <div class="ticket-box">
-          <span>Ticket Reference ID:</span>
-          <strong id="ticketNumberDisplay">#ASTU-0000</strong>
-        </div>
-        <p class="success-hint">The school administration reviews all submissions and takes necessary action.</p>
-        <button type="button" class="btn-primary-done" id="doneComplaintBtn">
-          Done
-        </button>
       </div>
 
     </div>
   </div>
 
-  <script src="/static/js/chat.js?v=3.0"></script>
+  <script src="/static/js/chat.js?v=4.0"></script>
 </body>
 </html>
